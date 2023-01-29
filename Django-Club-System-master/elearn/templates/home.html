@@ -1,0 +1,184 @@
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'vendor/bootstrap/four/css/bootstrap.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'vendor/bootstrap/three/css/bootstrap.min.css' %}">
+
+<link rel="stylesheet" type="text/css" href="{% static 'comment/css/comment.css' %}">
+<style type="text/css">
+    body {
+        font-family: "Open Sans", sans-serif;
+        color: #212529;
+    }
+
+    a {
+        color: #2315fd;
+        text-decoration: none;
+    }
+
+    a:hover {
+        color: #157afd;
+        text-decoration: none;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    .font-primary {
+        font-family: "Raleway", sans-serif;
+    }
+
+
+    #hero {
+        padding: 0;
+        width: 100%;
+        height: 100vh;
+        background: #fef8f5;
+        border-bottom: 2px solid #fcebe3;
+        margin: 0;
+    }
+
+    #hero h1 {
+        margin: 0;
+        font-size: 48px;
+        font-weight: 700;
+        line-height: 56px;
+        color: #4e4039;
+    }
+
+    #hero h2 {
+        color: #a08f86;
+        margin: 15px 0 0 0;
+        font-size: 24px;
+    }
+
+    #hero .btn-get-started {
+        font-family: "Raleway", sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+        letter-spacing: 1px;
+        display: inline-block;
+        padding: 8px 28px;
+        border-radius: 3px;
+        transition: 0.5s;
+        margin-top: 30px;
+        color: #fff;
+        background: #2315fd;
+    }
+
+    #hero .btn-get-started:hover {
+        background: #157afd;
+    }
+
+    #hero .animated {
+        animation: up-down 2s ease-in-out infinite alternate-reverse both;
+    }
+
+    @media (max-width: 991px) {
+        #hero {
+            height: calc(100vh - 72px);
+        }
+
+        #hero .animated {
+            -webkit-animation: none;
+            animation: none;
+        }
+
+        #hero .hero-img {
+            text-align: center;
+        }
+
+        #hero .hero-img img {
+            width: 50%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        #hero h1 {
+            font-size: 28px;
+            line-height: 36px;
+        }
+
+        #hero h2 {
+            font-size: 18px;
+            line-height: 24px;
+        }
+
+        #hero .hero-img img {
+            width: 70%;
+        }
+    }
+
+    @media (max-width: 575px) {
+        #hero .hero-img img {
+            width: 80%;
+        }
+    }
+
+    @media (max-height: 600px) {
+        #hero {
+            height: 120vh;
+        }
+    }
+
+    @-webkit-keyframes up-down {
+        0% {
+            transform: translateY(10px);
+        }
+
+        100% {
+            transform: translateY(-10px);
+        }
+    }
+
+    @keyframes up-down {
+        0% {
+            transform: translateY(10px);
+        }
+
+        100% {
+            transform: translateY(-10px);
+        }
+    }
+</style>
+
+{% include 'nav.html' %}
+
+
+<section id="hero" class="d-flex align-items-center">
+
+    <div class="container">
+        <div class="row gy-4">
+            <div class="col-lg-6 order-2 order-lg-1 d-flex flex-column justify-content-center">
+                <h1>Web-application to highlight the activities of student clubs at the university</h1>
+                <h2>We are the talented people who create the world of around the world</h2>
+                <div>
+                    <a class="btn-get-started scrollto" href="{% url 'lsign' %}">Get Started</a>
+                </div>
+            </div>
+            <div class="col-lg-6 order-1 order-lg-2 hero-img">
+                <img src="{% static 'img/hero-img.svg' %}" class="img-fluid animated" alt="">
+            </div>
+        </div>
+    </div>
+
+</section>
+
+
+
+
+<script type="text/javascript" src="{% static 'js/jquery-2.1.3.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/jquery.dataTables.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/main.js' %}"></script>
+</body>
+
+</html>
+
+
+</body>
+</html>
+
+
