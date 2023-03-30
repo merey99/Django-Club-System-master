@@ -32,6 +32,7 @@ path('create_user_form/', views.create_user_form, name='create_user_form'),
 path('create_user/', views.create_user, name='create_user'),
 path('acreate_profile/', views.acreate_profile, name='acreate_profile'),
 path('auser_profile/', views.auser_profile, name='auser_profile'),
+path('aupdate-profile/', views.aupdate_profile, name='aupdate_profile'),
 
 
 
@@ -49,6 +50,14 @@ path('listnotes/', views.LNotesList.as_view(), name='lnotes'),
 path('iadd_notes/', views.iadd_notes, name='iadd_notes'),
 path('publish_notes/', views.publish_notes, name='publish_notes'),
 path('update_file/<int:pk>', views.update_file, name='update_file'),
+path('tutorial-delete/<int:pk>', views.TutorialDeleteView.as_view(), name='tutorial-delete'),
+path('listallevent/', views.ListAllEvents.as_view(), name='listallevent'),
+path('notes-delete/<int:pk>', views.NotesDeleteView.as_view(), name='notes-delete'),
+path('listanns/', views.ListAllAnns.as_view(), name='listanns'),
+path('danns/<int:pk>', views.deleteAnns.as_view(), name='danns'),
+path('iupdate-profile/', views.iupdate_profile, name='iupdate_profile'),
+
+
 
 
 
@@ -62,44 +71,7 @@ path('luser_profile/', views.luser_profile, name='luser_profile'),
 path('lcreate_profile/', views.lcreate_profile, name='lcreate_profile'),
 path('tutorials/<int:pk>/', views.LTutorialDetail.as_view(), name = "tutorial-detail"),
 path('interests/', views.LearnerInterestsView.as_view(), name='interests'),
+path('home_course/', views.home_clubs, name='home_clubs'),
+path('lupdate_profile/', views.lupdate_profile, name='lupdate_profile'),
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
 ]

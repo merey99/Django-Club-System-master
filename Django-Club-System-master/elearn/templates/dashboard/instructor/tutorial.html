@@ -13,14 +13,14 @@
                         <ol class="breadcrumb">
 
                             <li class="breadcrumb-item">
-                                <a href="">Post New Rule</a>
+                                <a href="">Post New Event</a>
                             </li>
 
                         </ol>
                         <div class="card mb-3">
                             <div class="card-header">
                                 <i class="fas fa-table text-primary"></i>
-                                Please Do Not Forget To Attach Rule Thumbnail
+                                Please Do Not Forget To Attach Rule
                             </div>
                             <div class="card-body">
                                 {% for message in messages %}
@@ -32,17 +32,16 @@
                                     {% csrf_token %}
                                     <div class="form-label-group">
                                         <select class="w3-select w3-border" name="course_id" required="">
-                                            }
-
                                             <option value="">Choose Club</option>
-
-                                            {% if courses %}
                                             {% for course in courses %}
-                                            <option value="{{ course.id }}">{{ course.name }}</option>
+                                            <option value="{{ course.0 }}">{{ course.1 }}</option>
                                             {% endfor %}
+                                            {% if not courses %}
+                                            <option value="" disabled selected>No club found</option>
                                             {% endif %}
                                         </select>
                                     </div>
+
 
                                     <div class="form-group">
                                         <div class="row">
@@ -56,7 +55,7 @@
 
                                     <div class="form-group">
                                         <div class="row">
-                                            <div class="col"><label>Rule Title</label><br>
+                                            <div class="col"><label>Event Title</label><br>
 
                                                 <input type="text" name="title">
                                             </div>
@@ -65,18 +64,16 @@
 
                                     <div class="form-group">
                                         <div class="row">
-                                            <div class="col"><label>Rule Content</label><br>
+                                            <div class="col"><label>Event Content</label><br>
                                                 <textarea name="content" s rows="5" cols="40"></textarea>
 
                                             </div>
                                         </div>
                                     </div>
 
-
                                     <div class="form-group">
                                         <div class="row">
                                             <button type="submit" class="btn btn btn-primary" href="">Post</button>
-
                                         </div>
                                     </div>
                                 </form>

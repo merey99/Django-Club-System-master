@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import TemplateView
 from django.contrib import auth
 from django.contrib.auth import authenticate
+from django.db import connection
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -14,7 +15,7 @@ from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.http import HttpResponse, Http404
 # from .models import Customer, Profile
-from .forms import TakeQuizForm, LearnerSignUpForm, InstructorSignUpForm, QuestionForm, BaseAnswerInlineFormSet, \
+from .forms import LearnerSignUpForm, InstructorSignUpForm, BaseAnswerInlineFormSet, \
     LearnerInterestsForm, LearnerCourse, UserForm, ProfileForm, PostForm
 from django.http import HttpResponseRedirect, HttpResponse
 from django.template import loader
@@ -32,7 +33,7 @@ import operator
 import itertools
 from django.db.models import Avg, Count, Sum
 from django.forms import inlineformset_factory
-from .models import TakenQuiz, Profile, Quiz, Question, Answer, Learner, User, Course, Tutorial, Notes, Announcement
+from .models import Profile, Learner, User, Course, Tutorial, Notes, Announcement, Instructor
 from django.db import transaction
 from django.contrib.auth.hashers import make_password
 from django.core.files.storage import FileSystemStorage
@@ -109,8 +110,8 @@ class InstructorSignUpView(CreateView):
 
     def form_valid(self, form):
         user = form.save()
-        messages.success(self.request, 'Instructor Was Added Successfully')
         return redirect('isign')
+
 
 
 class AdminLearner(CreateView):
@@ -229,7 +230,7 @@ def acreate_profile(request):
         city = request.POST['city']
         country = request.POST['country']
         avatar = request.FILES['avatar']
-        hobby = request.POST['hobby']
+        # hobby = request.POST['hobby']
         current_user = request.user
         user_id = current_user.id
         print(user_id)
@@ -254,8 +255,34 @@ def auser_profile(request):
     users = {'users': users}
     return render(request, 'dashboard/admin/user_profile.html', users)
 
+def aupdate_profile(request):
+    current_user = request.user
+    user_id = current_user.id
+    profile = Profile.objects.filter(user_id=user_id).first()
+    if request.method == 'POST':
+        profile.bio = request.POST.get('bio', '')
+        profile.phonenumber = request.POST.get('phonenumber', '')
+        profile.city = request.POST.get('city', '')
+        profile.country = request.POST.get('country', '')
+        profile.hobby = request.POST.get('hobby', '')
 
-# Instructor Views
+        if 'avatar' in request.FILES:
+            profile.avatar = request.FILES['avatar']
+
+        profile.save()
+        messages.success(request, 'Your Profile Was Updated Successfully')
+        return redirect('auser_profile')
+    else:
+        context = {'profile': profile}
+        return render(request, 'dashboard/admin/update_profile.html', context)
+    return HttpResponse('Something went wrong.')
+
+
+# Instructor Views ============================================
+from django.db import connection
+from django.shortcuts import render
+
+
 def home_instructor(request):
     learner = User.objects.filter(is_learner=True).count()
     instructor = User.objects.filter(is_instructor=True).count()
@@ -266,6 +293,30 @@ def home_instructor(request):
     return render(request, 'dashboard/instructor/home.html', context)
 
 
+def iupdate_profile(request):
+    current_user = request.user
+    user_id = current_user.id
+    profile = Profile.objects.filter(user_id=user_id).first()
+    if request.method == 'POST':
+        profile.bio = request.POST.get('bio', '')
+        profile.phonenumber = request.POST.get('phonenumber', '')
+        profile.city = request.POST.get('city', '')
+        profile.country = request.POST.get('country', '')
+        profile.hobby = request.POST.get('hobby', '')
+
+        if 'avatar' in request.FILES:
+            profile.avatar = request.FILES['avatar']
+
+        profile.save()
+        messages.success(request, 'Your Profile Was Updated Successfully')
+        return redirect('user_profile')
+    else:
+        context = {'profile': profile}
+        return render(request, 'dashboard/instructor/update_profile.html', context)
+    return HttpResponse('Something went wrong.')
+
+
+# =================
 class CreatePost(CreateView):
     form_class = PostForm
     model = Announcement
@@ -275,6 +326,7 @@ class CreatePost(CreateView):
     def form_valid(self, form):
         self.object = form.save(commit=False)
         self.object.user = self.request.user
+        self.object.course = form.cleaned_data['interests'].first()  # set course field to first course in interests
         self.object.save()
         return super().form_valid(form)
 
@@ -284,7 +336,11 @@ class TiseList(LoginRequiredMixin, ListView):
     template_name = 'dashboard/instructor/tise_list.html'
 
     def get_queryset(self):
-        return Announcement.objects.filter(posted_at__lt=timezone.now()).order_by('posted_at')
+        instructor = self.request.user.instructor
+        instructor_interests = instructor.interest.values_list('pk', flat=True)
+        queryset = Announcement.objects.filter(course__in=instructor_interests).order_by('posted_at')
+        return queryset
+
 
 
 def user_profile(request):
@@ -313,7 +369,7 @@ def create_profile(request):
         Profile.objects.filter(id=user_id).create(user_id=user_id, first_name=first_name, last_name=last_name,
                                                   phonenumber=phonenumber, bio=bio, city=city, country=country,
                                                   birth_date=birth_date, avatar=avatar)
-        messages.success(request, 'Profile was created successfully')
+        # messages.success(request, 'Profile was created successfully')
         return redirect('user_profile')
     else:
         current_user = request.user
@@ -325,9 +381,16 @@ def create_profile(request):
 
 
 def tutorial(request):
-    courses = Course.objects.only('id', 'name')
-    context = {'courses': courses}
-
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT elearn_course.id, elearn_course.name
+            FROM elearn_course
+            JOIN elearn_instructor_interest eii ON elearn_course.id = eii.course_id
+            JOIN elearn_user eu ON eii.instructor_id = eu.id
+            WHERE eu.id = %s
+        """, [request.user.id])
+        result = cursor.fetchall()
+    context = {'courses': result}
     return render(request, 'dashboard/instructor/tutorial.html', context)
 
 
@@ -336,11 +399,9 @@ def publish_tutorial(request):
         title = request.POST['title']
         course_id = request.POST['course_id']
         content = request.POST['content']
-        thumb = request.FILES['thumb']
+        thumb = request.FILES.get('thumb', None)
         current_user = request.user
         author_id = current_user.id
-        print(author_id)
-        print(course_id)
         a = Tutorial(title=title, content=content, thumb=thumb, user_id=author_id, course_id=course_id)
         a.save()
         messages.success(request, 'Tutorial was published successfully!')
@@ -360,6 +421,25 @@ class ITutorialDetail(LoginRequiredMixin, DetailView):
     model = Tutorial
     template_name = 'dashboard/instructor/tutorial_detail.html'
 
+class TutorialDeleteView(SuccessMessageMixin, DeleteView):
+    model = Tutorial
+    template_name = 'dashboard/instructor/tutorial_confirm_delete.html'
+    success_url = reverse_lazy('tutorial')
+    # success_message = "Event Was Deleted Successfully"
+    #
+
+
+
+class ListAllEvents(LoginRequiredMixin, ListView):
+    model = Tutorial
+    template_name = 'dashboard/instructor/list_events.html'
+    context_object_name = 'tutorials'
+    paginated_by = 10
+
+    def get_queryset(self):
+        return Tutorial.objects.order_by('-id')
+
+
 
 class LNotesList(ListView):
     model = Notes
@@ -370,10 +450,24 @@ class LNotesList(ListView):
     def get_queryset(self):
         return Notes.objects.order_by('-id')
 
+class NotesDeleteView(SuccessMessageMixin, DeleteView):
+    model = Notes
+    template_name = 'dashboard/instructor/notes_confirm_delete.html'
+    success_url = reverse_lazy('instructor')
+    # success_message = "Note Was Deleted Successfully"
+
 
 def iadd_notes(request):
-    courses = Course.objects.only('id', 'name')
-    context = {'courses': courses}
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT elearn_course.id, elearn_course.name
+            FROM elearn_course
+            JOIN elearn_instructor_interest eii ON elearn_course.id = eii.course_id
+            JOIN elearn_user eu ON eii.instructor_id = eu.id
+            WHERE eu.id = %s
+        """, [request.user.id])
+        result = cursor.fetchall()
+    context = {'courses': result}
     return render(request, 'dashboard/instructor/add_notes.html', context)
 
 
@@ -381,11 +475,10 @@ def publish_notes(request):
     if request.method == 'POST':
         title = request.POST['title']
         course_id = request.POST['course_id']
-        cover = request.FILES['cover']
-        file = request.FILES['file']
+        cover = request.FILES.get('cover', None)
+        file = request.FILES.get('file', None)
         current_user = request.user
         user_id = current_user.id
-
         a = Notes(title=title, cover=cover, file=file, user_id=user_id, course_id=course_id)
         a.save()
         messages.success = (request, 'Notes Was Published Successfully')
@@ -412,17 +505,85 @@ def update_file(request, pk):
     else:
         return render(request, 'dashboard/instructor/update.html')
 
+# 462 -----------------
+class ListAllAnns(LoginRequiredMixin, ListView):
+    model = Announcement
+    template_name = 'dashboard/instructor/list_anns.html'
+    context_object_name = 'tises'
+    paginated_by = 10
+
+    def get_queryset(self):
+        instructor = self.request.user.instructor
+        instructor_interests = instructor.interest.values_list('pk', flat=True)
+        queryset = Announcement.objects.filter(course__in=instructor_interests).order_by('-id')
+        return queryset
+
+
+
+class deleteAnns(SuccessMessageMixin, DeleteView):
+    model = Announcement
+    template_name = 'dashboard/instructor/anns_confirm_delete.html'
+    success_url = reverse_lazy('listanns')
+
 
 # Learner Views
+
+def lupdate_profile(request):
+    current_user = request.user
+    user_id = current_user.id
+    profile = Profile.objects.filter(user_id=user_id).first()
+    if request.method == 'POST':
+        profile
+        profile.bio = request.POST.get('bio', '')
+        profile.phonenumber = request.POST.get('phonenumber', '')
+        profile.city = request.POST.get('city', '')
+        profile.country = request.POST.get('country', '')
+        profile.hobby = request.POST.get('hobby', '')
+
+        if 'avatar' in request.FILES:
+            profile.avatar = request.FILES['avatar']
+
+        profile.save()
+        messages.success(request, 'Your Profile Was Updated Successfully')
+        return redirect('luser_profile')
+    else:
+        context = {'profile': profile}
+        return render(request, 'dashboard/learner/learner_update_profile.html', context)
+    return HttpResponse('Something went wrong.')
+
+
 def home_learner(request):
     learner = User.objects.filter(is_learner=True).count()
     instructor = User.objects.filter(is_instructor=True).count()
     course = Course.objects.all().count()
     users = User.objects.all().count()
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT name, instructor_id, username
+            FROM elearn_course
+            JOIN elearn_instructor_interest eii ON elearn_course.id = eii.course_id
+            JOIN elearn_user eu ON eii.instructor_id = eu.id
+        """)
+        result = cursor.fetchall()
 
-    context = {'learner': learner, 'course': course, 'instructor': instructor, 'users': users}
+    context = {'learner': learner, 'course': course, 'instructor': instructor, 'users': users, 'result': result}
 
     return render(request, 'dashboard/learner/home.html', context)
+
+
+
+def home_clubs(request):
+    instructors = Profile.objects.filter(user__is_instructor=True)
+    instructor_courses = []
+    for instructor in instructors:
+        courses = Course.objects.filter(instructor__user=instructor.user)
+        for course in courses:
+            instructor_courses.append({
+                'instructor_first_name': instructor.first_name,
+                'course_name': course.name
+            })
+
+    return render(request, 'dashboard/learner/home_clubs.html', {'instructor_courses': instructor_courses})
 
 
 class LearnerSignUpView(CreateView):
@@ -442,8 +603,10 @@ class LearnerSignUpView(CreateView):
 
 
 def ltutorial(request):
-    tutorials = Tutorial.objects.all().order_by('-created_at')
-    tutorials = {'tutorials': tutorials}
+    learner = request.user.learner
+    learner_interests = learner.interests.values_list('pk', flat=True)
+    queryset = Tutorial.objects.filter(course__in=learner_interests).order_by('-created_at')
+    tutorials = {'tutorials': queryset}
     return render(request, 'dashboard/learner/list_tutorial.html', tutorials)
 
 
@@ -454,7 +617,10 @@ class LLNotesList(ListView):
     paginate_by = 4
 
     def get_queryset(self):
-        return Notes.objects.order_by('-id')
+        learner = self.request.user.learner
+        learner_interests = learner.interests.values_list('pk', flat=True)
+        queryset = Notes.objects.filter(course__in=learner_interests).order_by('-id')
+        return queryset
 
 
 class ITiseList(LoginRequiredMixin, ListView):
@@ -462,7 +628,14 @@ class ITiseList(LoginRequiredMixin, ListView):
     template_name = 'dashboard/learner/tise_list.html'
 
     def get_queryset(self):
-        return Announcement.objects.filter(posted_at__lt=timezone.now()).order_by('posted_at')
+        learner = self.request.user.learner
+        learner_interests = learner.interests.values_list('pk', flat=True)
+        queryset = Announcement.objects.filter(course__in=learner_interests).order_by('posted_at')
+        return queryset
+
+
+    # def get_queryset(self):
+    #     return Announcement.objects.filter(posted_at__lt=timezone.now()).order_by('posted_at')
 
 
 def luser_profile(request):
@@ -520,76 +693,15 @@ class LearnerInterestsView(UpdateView):
         messages.success(self.request, 'Course Was Updated Successfully')
         return super().form_valid(form)
 
-#
-# class LQuizListView(ListView):
-#     model = Quiz
-#     ordering = ('name', )
-#     context_object_name = 'quizzes'
-#     template_name = 'dashboard/learner/quiz_list.html'
-#
-#     def get_queryset(self):
-#         learner = self.request.user.learner
-#         learner_interests = learner.interests.values_list('pk', flat=True)
-#         taken_quizzes = learner.quizzes.values_list('pk', flat=True)
-#         queryset = Quiz.objects.filter(course__in=learner_interests) \
-#             .exclude(pk__in=taken_quizzes) \
-#             .annotate(questions_count=Count('questions')) \
-#             .filter(questions_count__gt=0)
-#         return queryset
-#
-#
-#
-# class TakenQuizListView(ListView):
-#     model = TakenQuiz
-#     context_object_name = 'taken_quizzes'
-#     template_name = 'dashboard/learner/taken_quiz_list.html'
+
+# class LearnerCalendar(ListView):
+#     model = Announcement
+#     template_name = 'dashboard/learner/calendar.html'
+#     context_object_name = 'meetings'
 #
 #     def get_queryset(self):
-#         queryset = self.request.user.learner.taken_quizzes \
-#             .select_related('quiz', 'quiz__course') \
-#             .order_by('quiz__name')
-#         return queryset
-#
-#
-#
-#
-# def take_quiz(request, pk):
-#     quiz = get_object_or_404(Quiz, pk=pk)
-#     learner = request.user.learner
-#
-#     if learner.quizzes.filter(pk=pk).exists():
-#         return render(request, 'dashboard/learner/taken_quiz.html')
-#
-#     total_questions = quiz.questions.count()
-#     unanswered_questions = learner.get_unanswered_questions(quiz)
-#     total_unanswered_questions = unanswered_questions.count()
-#     progress = 100 - round(((total_unanswered_questions - 1) / total_questions) * 100)
-#     question = unanswered_questions.first()
-#
-#     if request.method == 'POST':
-#         form = TakeQuizForm(question=question, data=request.POST)
-#         if form.is_valid():
-#             with transaction.atomic():
-#                 learner_answer = form.save(commit=False)
-#                 learner_answer.student = learner
-#                 learner_answer.save()
-#                 if learner.get_unanswered_questions(quiz).exists():
-#                     return redirect('take_quiz', pk)
-#                 else:
-#                     correct_answers = learner.quiz_answers.filter(answer__question__quiz=quiz, answer__is_correct=True).count()
-#                     score = round((correct_answers / total_questions) * 100.0, 2)
-#                     TakenQuiz.objects.create(learner=learner, quiz=quiz, score=score)
-#                     if score < 50.0:
-#                         messages.warning(request, 'Better luck next time! Your score for the quiz %s was %s.' % (quiz.name, score))
-#                     else:
-#                         messages.success(request, 'Congratulations! You completed the quiz %s with success! You scored %s points.' % (quiz.name, score))
-#                     return redirect('lquiz_list')
-#     else:
-#         form = TakeQuizForm(question=question)
-#
-#     return render(request, 'dashboard/learner/take_quiz_form.html', {
-#         'quiz': quiz,
-#         'question': question,
-#         'form': form,
-#         'progress': progress
-#     })
+#         learner = Learner.objects.get(user=self.request.user)
+#         interests = learner.interests.all()
+#         meetings = Announcement.objects.filter(course__in=interests, meeting__isnull=False)
+#         return meetings.order_by('meeting')
+

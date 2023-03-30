@@ -85,13 +85,13 @@
      <li class="nav-item">
         <a class="nav-link" href="{% url 'ltutorial' %}">
             <i class="fas fa-book-reader text-default"></i>
-            <span style="color: white">Read Rules</span>
+            <span style="color: white">Events</span>
         </a>
     </li>
       <li class="nav-item">
         <a class="nav-link" href="{% url 'llnotes' %}">
             <i class="fas fa-pen" aria-hidden="true"></i>
-            <span style="color: white">Read Notes</span>
+            <span style="color: white">Notes</span>
         </a>
     </li>
     <li class="nav-item">
@@ -99,8 +99,8 @@
         <i class="fas fa-bell"></i>
             <span style="color: white">Announcements</span>
         </a>
-    </li>  
- 
+    </li>
+
      
       <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="">
@@ -111,8 +111,12 @@
                 <a class="dropdown-item" href="{% url 'luser_profile' %}">View Profile</a>
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item" href="{% url 'lcreate_profile' %}">Create Profile</a>
+                 <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="{% url 'lupdate_profile' %}">Update Profile</a>
             </div>
         </li>
+
+
 </ul>    
 
     {% block body %}{% endblock %}

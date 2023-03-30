@@ -1,54 +1,73 @@
 {% extends 'dashboard/instructor/base.html' %}
 
 
-
 {% block body %}
 
 <div class="container-fluid">
-<div class="row">
+    <div class="row">
 
-<div class="col-sm-6" style="padding-top: 10px;">
-    <div class="card">
-</div>
+            <div class="col-sm-6 my-3">
 
+        <div class="card mb-5">
+            <div class="card-body">
 
-<div class="card mb-2">
-<div class="card-body">
+                <div class="row bg-light">
+                    <div class="card col-sm-12">
+                        <div class="card-header bg-primary text-white">
+                            <h4 class="text-center mb-0">Post New Announcement</h4>
+                        </div>
+                    </div>
 
-<div class="row" style="background-color: #999965">
-	 <div class="card col-sm-12">
-  <div class="card-header text-primary">
-     <center>Post New Announcement</center>
-  </div>
-</div>
+                    <div class="col-sm-10 offset-sm-1">
+                        <div class="myform p-3">
+                            <form method="POST">
+                                {% csrf_token %}
+                                {{ form.as_p }}
 
-    <div class="col-sm-8">
-    	<div class="myform">
-    	    <form method="POST">
-    	{% csrf_token %}
-    	{{ form.as_p }}
-
-    	<br><input type="submit" value="Post" class="btn btn-primary">
-    </form>
-</div>
-
-    <div class="col-sm-4"></div>
+                                <div class="text-center mt-3">
+                                    <input type="submit" value="Post" class="btn btn-primary">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
 
-                      </div>
-                    </div>  
-                  </div>
+    <div class="col-sm-2">
+    </div>
 
 </div>
 
 
 
-<div class="col-sm-2" style="color: red">
-</div>
+  <<style>
+    .card {
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-</div>
-</div>
+    .card-header {
+      border-radius: 5px 5px 0 0;
+    }
 
+    .myform {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .form-control:focus {
+        border-color: #6c757d;
+        box-shadow: none;
+    }
+
+    input[type=submit] {
+        width: 100%;
+    }
+
+</style>
 
 {% endblock body %}

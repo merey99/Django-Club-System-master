@@ -1,0 +1,79 @@
+{% extends 'dashboard/learner/base.html' %}
+
+
+{% load crispy_forms_tags %}
+{% block body %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 mb-3">
+            <div class="col-12 mb-3">
+
+
+                <div id="content-wrapper" style="padding-top: 20px">
+                    <div class="container-fluid">
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <i class="fas fa-table text-primary"></i>
+                                List of Clubs and Instructors
+                            </div>
+                            <div class="card-body">
+                                <h2 class="mb-3">List</h2>
+                                <table>
+                                    <thead>
+                                    <tr>
+                                        <th>
+                                            Counter
+                                        </th>
+                                        <th>
+                                            Club
+                                        </th>
+                                        <th>
+                                            Instructor
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    {% for instructor_course in instructor_courses %}
+                                    <tr>
+                                        <td>
+                                            {{ forloop.counter }}
+                                        </td>
+                                        <td>{{ instructor_course.course_name }}</td>
+                                        <td>{{ instructor_course.instructor_first_name }}</td>
+                                    </tr>
+                                    {% endfor %}
+
+                                </table>
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+</div>
+
+{% endblock body %}
+
+{% block extrascripts %}
+<script type="text/javascript">
+    $(function () {
+
+        // Read and Delete book buttons open modal with id="modal"
+        // The formURL is retrieved from the data of the element
+        $(".bs-modal").each(function () {
+            $(this).modalForm({formURL: $(this).data("form-url")});
+        });
+
+        // Hide message
+        $(".alert").fadeTo(2000, 500).slideUp(500, function () {
+            $(".alert").slideUp(500);
+        });
+    });
+</script>
+{% endblock extrascripts %}

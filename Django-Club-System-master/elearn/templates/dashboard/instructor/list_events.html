@@ -1,4 +1,4 @@
-{% extends 'dashboard/admin/base.html' %}
+{% extends 'dashboard/instructor/base.html' %}
 
 {% block body %}
 
@@ -17,10 +17,8 @@
                         <div class="card mb-3">
                             <div class="card-header">
                                 <i class="fas fa-table"></i>
-                                List of Users
-                                <a class="btn btn-sm btn-success" href="{% url 'create_user_form' %}"
-                                   style="padding: 8px; float: right; background-color: #3e3efd; color: white;">Register
-                                    Admin</a>
+                                List of Events
+
                             </div>
                             <div class="card-body">
                                 {% for message in messages %}
@@ -33,36 +31,26 @@
                                         <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>Username</th>
-                                            <th>User Role</th>
-                                            <th>Email</th>
+                                            <th>Event</th>
                                             <th>Delete</th>
 
                                         </tr>
                                         </thead>
                                         <tbody>
+                                        {% if tutorials %}
+                                        {% for tutorial in tutorials %}
 
-                                        {% if users %}
-                                        {% for user in users %}
                                         <tr>
-                                            <td>{{ user.id }}</td>
-                                            <td>{{ user.username }}</td>
-                                            <td>{% if user.is_learner == True %}
-                                                <p>Student</p>
-                                                {% elif user.is_admin == True %}
-                                                <p>Admin</p>
-                                                {% else %}
-                                                <p>Instructor</p>
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ user.email }}</td>
+                                            <td>{{ tutorial.id }}</td>
+                                            <td>{{ tutorial.title }}</td>
                                             <td>
-                                                <a href="{% url 'aduser' user.pk %}">
+                                                <a href="{% url 'tutorial-delete' tutorial.pk %}">
                                                     <button type="button" class="btn btn-danger"> Delete</button>
                                                 </a></td>
                                         </tr>
                                         {% endfor %}
                                         {% endif %}
+
                                         </tbody>
                                     </table>
                                     {% if is_paginated %}

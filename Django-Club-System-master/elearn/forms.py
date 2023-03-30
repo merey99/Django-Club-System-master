@@ -4,16 +4,28 @@ from django.db import transaction
 from django.forms.utils import ValidationError
 from django import forms
 
-from elearn.models import (Answer, Question, Learner, LearnerAnswer,
-                              Course, User, Announcement)
+from elearn.models import (Learner, Instructor, Course, User, Announcement, Tutorial)
 
-
-
+from django.db import connection
 
 class PostForm(forms.ModelForm):
+
+    interests = forms.ModelMultipleChoiceField(
+        queryset=Course.objects.all(),
+        required=True,
+        widget=forms.CheckboxSelectMultiple
+    )
+
+    meeting = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local', 'format': '%Y-%m-%dT%H:%M'}),
+        required=False
+    )
+
     class Meta:
         model = Announcement
-        fields = ('content', )
+        fields = ('content', 'meeting', 'interests')
+
+
 
 class ProfileForm(forms.ModelForm):
     email=forms.EmailField(widget=forms.EmailInput())
@@ -44,33 +56,38 @@ class ProfileForm(forms.ModelForm):
 class UserForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email') 
-
+        fields = ('username', 'first_name', 'last_name', 'email')
 
 class InstructorSignUpForm(UserCreationForm):
+    interests = forms.ModelMultipleChoiceField(
+        queryset = Course.objects.all(), required = True
+    )
+
     class Meta(UserCreationForm.Meta):
         model = User
+
 
     def __init__(self, *args, **kwargs):
             super(InstructorSignUpForm, self).__init__(*args, **kwargs)
 
             for fieldname in ['username', 'password1', 'password2']:
                 self.fields[fieldname].help_text = None
-                    
+
+    @transaction.atomic
     def save(self, commit=True):
         user = super().save(commit=False)
         user.is_instructor = True
         if commit:
             user.save()
+            instructor = Instructor.objects.create(user=user)
+            instructor.interest.add(*self.cleaned_data.get('interests'))
         return user
 
 
 
 class LearnerSignUpForm(UserCreationForm):
     interests = forms.ModelMultipleChoiceField(
-        queryset=Course.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
-        required=True
+        queryset = Course.objects.all(), required = True
     )
 
     class Meta(UserCreationForm.Meta):
@@ -81,7 +98,7 @@ class LearnerSignUpForm(UserCreationForm):
             super(LearnerSignUpForm, self).__init__(*args, **kwargs)
 
             for fieldname in ['username', 'password1', 'password2']:
-                self.fields[fieldname].help_text = None    
+                self.fields[fieldname].help_text = None
 
     @transaction.atomic
     def save(self):
@@ -103,12 +120,6 @@ class LearnerInterestsForm(forms.ModelForm):
         }
 
 
-class QuestionForm(forms.ModelForm):
-    class Meta:
-        model = Question
-        fields = ('text', )
-
-
 class BaseAnswerInlineFormSet(forms.BaseInlineFormSet):
     def clean(self):
         super().clean()
@@ -121,24 +132,6 @@ class BaseAnswerInlineFormSet(forms.BaseInlineFormSet):
                     break
         if not has_one_correct_answer:
             raise ValidationError('Mark at least one answer as correct.', code='no_correct_answer')
-
-
-class TakeQuizForm(forms.ModelForm):
-    answer = forms.ModelChoiceField(
-        queryset=Answer.objects.none(),
-        widget=forms.RadioSelect(),
-        required=True,
-        empty_label=None)
-
-    class Meta:
-        model = LearnerAnswer
-        fields = ('answer', )
-
-    def __init__(self, *args, **kwargs):
-        question = kwargs.pop('question')
-        super().__init__(*args, **kwargs)
-        self.fields['answer'].queryset = question.answers.order_by('text')
-
 
 class LearnerCourse(forms.ModelForm):
     class Meta:
@@ -153,3 +146,4 @@ class LearnerCourse(forms.ModelForm):
         learner = Learner()
         learner.interests.add(*self.cleaned_data.get('interests'))
         return learner_id
+

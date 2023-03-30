@@ -84,12 +84,6 @@
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{% url 'addlearner' %}">
-                <i class="fas fa-user-graduate"></i>
-                <span style="color: white">Register Student</span>
-            </a>
-        </li>
-        <li class="nav-item">
             <a class="nav-link" href="{% url 'course' %}">
                 <i class="fas fa-book-reader"></i>
                 <span style="color: white">Register Club</span>
@@ -131,6 +125,8 @@
                 <a class="dropdown-item" href="{% url 'auser_profile' %}">View Profile</a>
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item" href="{% url 'acreate_profile' %}">Create Profile</a>
+                  <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="{% url 'aupdate_profile' %}">Update Profile</a>
             </div>
         </li>
     </ul>

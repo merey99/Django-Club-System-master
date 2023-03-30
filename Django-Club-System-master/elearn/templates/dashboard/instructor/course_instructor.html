@@ -1,0 +1,30 @@
+{% extends 'dashboard/instructor/base.html' %}
+{% load static %}
+
+
+{% block body %}
+
+<div class="col-sm-8">
+    <h1>Course and Instructor Information</h1>
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Instructor ID</th>
+            <th>Username</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in result %}
+        <tr>
+            <td>{{ row.0 }}</td>
+            <td>{{ row.1 }}</td>
+            <td>{{ row.2 }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+{% endblock %}
